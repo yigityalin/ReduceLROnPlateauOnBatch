@@ -47,13 +47,13 @@ class ReduceLROnPlateauOnBatch(keras.callbacks.Callback):
                 new_lr = max(new_lr, self.min_lr)
                 K.set_value(self.model.optimizer.lr, new_lr)
   
-  def _init(self):
-    if self.mode == "min":
-        self.best = np.Inf
-        self.monitor_op = lambda a, b: np.less(a, b - self.min_delta)
-    else:
-        self.best = -np.Inf
-        self.monitor_op = lambda a, b: np.greater(a, b + self.min_delta)
-  
-  def _in_cooldown(self):
-    return self.cooldown_counter > 0
+    def _init(self):
+      if self.mode == "min":
+          self.best = np.Inf
+          self.monitor_op = lambda a, b: np.less(a, b - self.min_delta)
+      else:
+          self.best = -np.Inf
+          self.monitor_op = lambda a, b: np.greater(a, b + self.min_delta)
+
+    def _in_cooldown(self):
+      return self.cooldown_counter > 0
