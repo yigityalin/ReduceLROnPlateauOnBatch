@@ -4,8 +4,8 @@ from tensorflow import keras
 K = keras.backend
 
 class ReduceLROnPlateauOnBatch(keras.callbacks.Callback):
-  def __init__(self, *, monitor="loss", factor=0.8, patience=10, 
-               mode="min", min_lr=0, min_delta=1e-2, cooldown=0):
+  def __init__(self, *, monitor="loss", factor=0.1, patience=10, 
+               mode="min", min_lr=0, min_delta=1e-4, cooldown=0):
     if factor >= 1.0 or factor <= 0:
         raise ValueError(f"Factor must be satisfy 0 < factor < 1. Got {factor}")
     if mode not in ["min", "max"]:
@@ -42,18 +42,20 @@ class ReduceLROnPlateauOnBatch(keras.callbacks.Callback):
             self.wait += 1
             if self.wait >= self.patience:
                 old_lr = K.get_value(self.model.optimizer.lr)
-            if old_lr > np.float32(self.min_lr):
-                new_lr = old_lr * self.factor
-                new_lr = max(new_lr, self.min_lr)
-                K.set_value(self.model.optimizer.lr, new_lr)
+				if old_lr > np.float32(self.min_lr):
+					new_lr = old_lr * self.factor
+					new_lr = max(new_lr, self.min_lr)
+					K.set_value(self.model.optimizer.lr, new_lr)
+					self.cooldown_counter = self.cooldown
+					self.wait = 0
   
     def _init(self):
-      if self.mode == "min":
-          self.best = np.Inf
-          self.monitor_op = lambda a, b: np.less(a, b - self.min_delta)
-      else:
-          self.best = -np.Inf
-          self.monitor_op = lambda a, b: np.greater(a, b + self.min_delta)
+        if self.mode == "min":
+            self.best = np.Inf
+            self.monitor_op = lambda a, b: np.less(a, b - self.min_delta)
+        else:
+            self.best = -np.Inf
+            self.monitor_op = lambda a, b: np.greater(a, b + self.min_delta)
 
     def _in_cooldown(self):
-      return self.cooldown_counter > 0
+        return self.cooldown_counter > 0
